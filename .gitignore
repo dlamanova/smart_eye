@@ -32,6 +32,15 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+/Package.pins
+/Package.resolved
+
+# CocoaPods
+/Pods/
+/Carthage/Build/
+
+# Common macOS system files
+.DS_Store
 
 # Symbolication related
 app.*.symbols
