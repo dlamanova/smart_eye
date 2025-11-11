@@ -12,9 +12,9 @@ import '/features/auth/screens/splash_screen.dart';
 import '/features/auth/screens/login_page.dart';
 import '/features/auth/screens/register_page.dart';
 // Main App Screens
-import '/features/dashboard/screens/main_page.dart';
-import '/features/devices/screens/add_device_page.dart';
-import '/features/devices/screens/device_stream_page.dart';
+import 'features/dashboard/wrappers/main_page.dart';
+import 'features/devices/wrappers/add_device_page.dart';
+import 'features/devices/wrappers/device_stream_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

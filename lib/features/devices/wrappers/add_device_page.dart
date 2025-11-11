@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 // Updated to package imports
 import '/features/devices/controllers/add_device_controller.dart';
-import '/features/devices/screens/add_device_view.dart';
+import '../views/add_device_view.dart';
 import '/services/firebase_service.dart';
 
 /// The entry point for the Add Device feature.

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '/features/devices/controllers/device_stream_controller.dart';
-import '/features/devices/screens/device_stream_view.dart';
+import '../views/device_stream_view.dart';
 import '/services/firebase_service.dart';
 
 /// The entry point for the Device Stream feature.

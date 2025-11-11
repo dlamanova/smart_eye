@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '/features/dashboard/controllers/main_page_controller.dart';
-import '/features/dashboard/screens/main_page_view.dart';
+import '../views/main_page_view.dart';
 import '/services/firebase_service.dart';
 
 /// The entry point for the Main Dashboard feature.
