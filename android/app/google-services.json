@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "354254852702",
+    "project_id": "smarteye-b6322",
+    "storage_bucket": "smarteye-b6322.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:354254852702:android:bf0583146707b172bc9acf",
+        "android_client_info": {
+          "package_name": "com.example.smart_eye"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCF2QY2rWqi8ZxABVNljiMc3r6BlHT5nzI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
