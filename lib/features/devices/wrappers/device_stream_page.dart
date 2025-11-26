@@ -1,39 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '/features/devices/controllers/device_stream_controller.dart';
 import '../views/device_stream_view.dart';
-import '/services/firebase_service.dart';
+// Note: Imports for controllers and services are no longer needed here
+// because the controller is provided higher up in the widget tree (in main.dart).
 
 /// The entry point for the Device Stream feature.
-/// This widget retrieves the deviceId passed via arguments and provides
-/// the DeviceStreamController to the view tree.
+/// This widget acts as a simple wrapper, relying on the parent route (in main.dart)
+/// to have provided the necessary DeviceStreamController via ChangeNotifierProvider.
 class DeviceStreamPage extends StatelessWidget {
   const DeviceStreamPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // 1. Retrieve the device ID passed from the dashboard
-    final deviceId = ModalRoute.of(context)?.settings.arguments as String?;
+    // We no longer manually retrieve deviceId or create the controller here.
+    // The main.dart route handles the creation of:
+    // ChangeNotifierProvider<DeviceStreamController>(
+    //   create: (context) => DeviceStreamController(firebaseService, janusService, deviceId),
+    //   child: const DeviceStreamPage(), // <--- We are here
+    // )
 
-    if (deviceId == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Error')),
-        body: const Center(
-          child: Text(
-            'Error: Device ID not provided.',
-            style: TextStyle(color: Colors.red),
-          ),
-        ),
-      );
-    }
-
-    // 2. Instantiate the service and controller
-    final firebaseService = FirebaseService();
-
-    return ChangeNotifierProvider(
-      // The controller takes the FirebaseService and the deviceId
-      create: (_) => DeviceStreamController(firebaseService, deviceId),
-      child: const DeviceStreamView(),
-    );
+    // Just return the view, which will consume the provided controller.
+    return const DeviceStreamView();
   }
 }
