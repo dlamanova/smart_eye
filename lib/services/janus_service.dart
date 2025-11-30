@@ -4,13 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:http/http.dart' as http;
 
-/// Service to handle communication with the Janus Gateway via HTTP Long-Polling.
+/// Service to handle communication with the Janus Gateway
 class JanusService {
-  // Switched to HTTP protocol and using your confirmed IP/Port.
-  // CRITICAL NOTE: If running on Flutter Web, this still requires the Janus
-  // server to be on the same origin or accessed via a CORS-enabled proxy.
-  static const String janusServerUrl = 'http://192.168.1.10:8088/janus';
-  static const String janusAdminUrl = 'http://192.168.1.10:7088/janusx/admin';
+  static const String janusServerUrl = 'http://192.168.1.84:8088/janus';
+  // static const String janusAdminUrl = 'http://192.168.1.10:7088/janusx/admin';
 
   String? _sessionId;
   String? _handleId;
@@ -44,7 +41,7 @@ class JanusService {
     body['transaction'] = 'tr${_transactionId.toString()}';
 
     // Construct the full URL
-    final String _url = isAdmin ? janusAdminUrl : janusServerUrl;
+    final String _url = janusServerUrl;
 
     try {
       Uri url;
@@ -192,6 +189,36 @@ class JanusService {
     await _sessionCompleter!.future;
   }
 
+  /// Sends the WebRTC SDP Answer back to Janus.
+  Future<void> sendAnswer(RTCSessionDescription answer) async {
+    if (_handleId == null) {
+      throw Exception(
+        "Janus handle not attached when attempting to send Answer.",
+      );
+    }
+
+    // Ensure the SDP Answer includes DTLS and ICE configurations
+    final answerMessage = {
+      'janus': 'message',
+      'body': {
+        'request': 'start', // Send 'start' with the Answer to begin streaming
+      },
+      'jsep': {'type': answer.type, 'sdp': answer.sdp},
+    };
+
+    debugPrint('JanusService: Sending SDP Answer back to Janus...');
+    debugPrint('JanusService: Answer Message: $answerMessage');
+
+    final response = await _sendPost(
+      answerMessage,
+      specificHandleId: _handleId,
+    );
+    debugPrint('JanusService: sendAnswer response: $response');
+    if (response == null || response['janus'] != 'ack') {
+      throw Exception("Failed to send SDP Answer to Janus.");
+    }
+  }
+
   /// Attaches to the Streaming Plugin and requests to watch the stream.
   Future<void> attachAndWatchStream() async {
     if (_sessionId == null) {
@@ -233,40 +260,7 @@ class JanusService {
     if (watchResponse == null || watchResponse['janus'] != 'ack') {
       throw Exception("Failed to send watch command to Janus.");
     }
-  }
-
-  /// Sends the WebRTC SDP Answer back to Janus.
-  Future<void> sendAnswer(RTCSessionDescription answer) async {
-    if (_handleId == null) {
-      throw Exception(
-        "Janus handle not attached when attempting to send Answer.",
-      );
-    }
-
-    // Ensure the SDP Answer includes DTLS and ICE configurations
-    final answerMessage = {
-      'janus': 'message',
-      'body': {
-        'request': 'start', // Send 'start' with the Answer to begin streaming
-      },
-      // Put only the SDP (type + sdp) in jsep. DO NOT include 'trickle' here.
-      'jsep': {'type': answer.type, 'sdp': answer.sdp},
-    };
-    if (_handleId == null) {
-      throw Exception(
-        "Janus handle not attached when attempting to send Answer.",
-      );
-    }
-    debugPrint('JanusService: Sending SDP Answer back to Janus...');
-
-    final response = await _sendPost(
-      answerMessage,
-      specificHandleId: _handleId,
-    );
-    debugPrint('JanusService: sendAnswer response: $response');
-    if (response == null || response['janus'] != 'ack') {
-      throw Exception("Failed to send SDP Answer to Janus.");
-    }
+    debugPrint('JanusService: Watch command sent successfully.');
   }
 
   /// Sends a trickled ICE candidate. If [candidate] is null, send the

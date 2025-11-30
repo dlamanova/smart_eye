@@ -33,13 +33,21 @@ class DeviceStreamController extends ChangeNotifier {
   RTCVideoRenderer get remoteRenderer => _remoteRenderer;
 
   // --- WebRTC Configuration ---
-  static const Map<String, dynamic> _iceServers = {
+  // Provide a STUN server so the emulator can gather server-reflexive candidates
+  // (which are reachable from Janus on the LAN). Add TURN if you need relays.
+  static final Map<String, dynamic> _iceServers = {
     'iceServers': [
-      // Standard public STUN server for initial ICE gathering
-      {'urls': 'stun:stun1.l.google.com:19302'},
-      // Add local TURN servers here if needed for better connectivity
+      // Example TURN (uncomment & fill if you run a TURN server):
+      // {
+      //   'urls': 'turn:your.turn.server:3478',
+      //   'username': 'user',
+      //   'credential': 'pass',
+      // },
     ],
+    'iceTransportPolicy': 'all',
   };
+
+
 
   // Constructor
   DeviceStreamController(
@@ -193,8 +201,7 @@ class DeviceStreamController extends ChangeNotifier {
         _remoteStream = event.streams[0];
         debugPrint('Remote stream track received and attached to renderer.');
         notifyListeners();
-      }
-    };
+      }};
 
     // 4. Setup local ICE candidate sender
     _peerConnection?.onIceCandidate = (candidate) {
@@ -202,6 +209,16 @@ class DeviceStreamController extends ChangeNotifier {
         debugPrint(
           'Local ICE candidate generated: ${candidate.candidate} sdpMid=${candidate.sdpMid} sdpMLineIndex=${candidate.sdpMLineIndex}',
         );
+
+        // Filter out obvious loopback candidates from the emulator so we don't
+        // send localhost to Janus. Keep candidates like srflx/relay.
+        final candStr = candidate.candidate ?? '';
+        final isLoopback = candStr.contains('127.0.0.1') || candStr.contains('::1');
+        if (isLoopback) {
+          debugPrint('Skipping loopback ICE candidate (not sending to Janus): $candStr');
+          return;
+        }
+
         // Send generated ICE Candidates to Janus via the service
         _janusService.sendTrickleCandidate(candidate).catchError((e) {
           debugPrint('Error sending trickle candidate to Janus: $e');
