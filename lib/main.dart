@@ -66,11 +66,13 @@ class SmartEyeApp extends StatelessWidget {
         return MaterialApp(
           title: 'SmartEye',
           debugShowCheckedModeBanner: false,
-          
+
           // Use centralized theme definitions
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
-          themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          themeMode: themeProvider.isDarkMode
+              ? ThemeMode.dark
+              : ThemeMode.light,
 
           initialRoute: '/',
           routes: {
@@ -93,14 +95,18 @@ class SmartEyeApp extends StatelessWidget {
               debugPrint('onGenerateRoute: Route segments: $segments');
 
               if (segments.length < 4) {
-                debugPrint('onGenerateRoute: Invalid route - expected at least 4 segments, got ${segments.length}');
+                debugPrint(
+                  'onGenerateRoute: Invalid route - expected at least 4 segments, got ${segments.length}',
+                );
                 return null;
               }
 
               final serverId = segments[segments.length - 2];
               final deviceId = segments.last;
 
-              debugPrint('onGenerateRoute: Extracted serverId="$serverId", deviceId="$deviceId"');
+              debugPrint(
+                'onGenerateRoute: Extracted serverId="$serverId", deviceId="$deviceId"',
+              );
 
               if (serverId.isEmpty) {
                 debugPrint('onGenerateRoute: ERROR - serverId is EMPTY!');
@@ -117,10 +123,7 @@ class SmartEyeApp extends StatelessWidget {
                 context,
                 listen: false,
               );
-              final fbService = Provider.of<FBService>(
-                context,
-                listen: false,
-              );
+              final fbService = Provider.of<FBService>(context, listen: false);
 
               return MaterialPageRoute(
                 builder: (context) => ChangeNotifierProvider(

@@ -1,29 +1,30 @@
 import 'dart:convert';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
 class ServerService {
   // static const String apiToken = 'YOUR_API_TOKEN_HERE';
 
-
   /// GET /health - Check if server is healthy
   Future<bool> checkHealth(List<int> ip, int port) async {
-
     String baseUrl = 'http://${ip.join('.')}:$port';
 
     debugPrint('ServerService: Checking health at $baseUrl/health...');
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/health'),
-        headers: {
-          // 'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      ).timeout(const Duration(seconds: 5));
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/health'),
+            headers: {
+              // 'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          )
+          .timeout(const Duration(seconds: 5));
 
       final isHealthy = response.statusCode == 200;
-      debugPrint('ServerService: Health check result -> ${isHealthy ? "SUCCESS (200 OK)" : "FAILURE (${response.statusCode})"}');
+      debugPrint(
+        'ServerService: Health check result -> ${isHealthy ? "SUCCESS (200 OK)" : "FAILURE (${response.statusCode})"}',
+      );
       return isHealthy;
     } catch (e) {
       debugPrint('ServerService: Health check FAILED with exception: $e');
@@ -77,9 +78,6 @@ class ServerService {
     }
   }
 
-
-
-
   /// POST /janus - Placeholder for Janus related requests
   // Future<Map<String, dynamic>?> janusRequest(Map<String, dynamic> body) async {
   //   try {
@@ -102,7 +100,12 @@ class ServerService {
   // }
 
   /// PUT /camera/{uuid} - Update camera details
-  Future<bool> updateCamera(List<int> ip, int port, String uuid, Map<String, dynamic> details) async {
+  Future<bool> updateCamera(
+    List<int> ip,
+    int port,
+    String uuid,
+    Map<String, dynamic> details,
+  ) async {
     String baseUrl = 'http://${ip.join('.')}:$port';
     try {
       final response = await http.put(

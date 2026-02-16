@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../core/theme_provider.dart';
 import '../services/firebase_service.dart';
 
 class PreferencesScreen extends StatefulWidget {
@@ -135,7 +133,9 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Account'),
-        content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
+        content: const Text(
+          'Are you sure you want to delete your account? This action cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -163,7 +163,9 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
 
                 if (mounted) {
                   // Navigate to login screen and remove all previous routes
-                  Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                  Navigator.of(
+                    context,
+                  ).pushNamedAndRemoveUntil('/login', (route) => false);
                 }
               } catch (e) {
                 if (mounted) {
@@ -221,9 +223,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -313,7 +313,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
               ),
             ),
           ),
-          
+
           Expanded(
             child: SingleChildScrollView(
               child: Padding(
@@ -326,7 +326,9 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                       // Profile Section
                       Text(
                         'Profile Settings',
-                        style: theme.textTheme.titleMedium?.copyWith(fontSize: 18),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontSize: 18,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       // Username
@@ -362,7 +364,9 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                       // Security Section
                       Text(
                         'Security',
-                        style: theme.textTheme.titleMedium?.copyWith(fontSize: 18),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontSize: 18,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       // New Password
@@ -373,7 +377,9 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                         obscureText: true,
                         theme: theme,
                         validator: (value) {
-                          if (value != null && value.isNotEmpty && value.length < 6) {
+                          if (value != null &&
+                              value.isNotEmpty &&
+                              value.length < 6) {
                             return 'Password must be at least 6 characters';
                           }
                           return null;
@@ -403,7 +409,9 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                         decoration: BoxDecoration(
                           color: theme.colorScheme.surface,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: theme.colorScheme.outline.withOpacity(0.5)),
+                          border: Border.all(
+                            color: theme.colorScheme.outline.withOpacity(0.5),
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.05),
@@ -422,7 +430,11 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.logout, color: theme.colorScheme.primary, size: 20),
+                              Icon(
+                                Icons.logout,
+                                color: theme.colorScheme.primary,
+                                size: 20,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 'Logout',
@@ -444,7 +456,9 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                         decoration: BoxDecoration(
                           color: Colors.red.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.red.withOpacity(0.5)),
+                          border: Border.all(
+                            color: Colors.red.withOpacity(0.5),
+                          ),
                         ),
                         child: TextButton(
                           onPressed: _handleDeleteAccount,
@@ -456,7 +470,11 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: const [
-                              Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                              Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                                size: 20,
+                              ),
                               SizedBox(width: 8),
                               Text(
                                 'Delete Account',
@@ -470,7 +488,9 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 100), // Add padding for the fixed button
+                      const SizedBox(
+                        height: 100,
+                      ), // Add padding for the fixed button
                     ],
                   ),
                 ),
@@ -583,7 +603,10 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
               controller: controller,
               obscureText: obscureText,
               keyboardType: keyboardType,
-              style: TextStyle(fontSize: 16, color: theme.textTheme.bodyLarge?.color),
+              style: TextStyle(
+                fontSize: 16,
+                color: theme.textTheme.bodyLarge?.color,
+              ),
               decoration: InputDecoration(
                 prefixIcon: Container(
                   margin: const EdgeInsets.all(8),

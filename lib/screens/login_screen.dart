@@ -148,13 +148,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       width: 90,
                                       height: 90,
                                       decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                          26,
-                                        ),
+                                        borderRadius: BorderRadius.circular(26),
                                         border: Border.all(
-                                          color: Colors.white.withOpacity(
-                                            0.2,
-                                          ),
+                                          color: Colors.white.withOpacity(0.2),
                                           width: 2,
                                         ),
                                       ),
@@ -172,13 +168,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(height: 32),
                             ShaderMask(
-                              shaderCallback: (bounds) =>
-                                  const LinearGradient(
-                                    colors: [
-                                      Colors.white,
-                                      Color(0xFFE0F2FE),
-                                    ],
-                                  ).createShader(bounds),
+                              shaderCallback: (bounds) => const LinearGradient(
+                                colors: [Colors.white, Color(0xFFE0F2FE)],
+                              ).createShader(bounds),
                               child: const Text(
                                 'SmartEye',
                                 style: TextStyle(
@@ -242,32 +234,36 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               child: ElevatedButton(
                                 onPressed: _isLoading ? null : _handleLogin,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  foregroundColor: const Color(0xFF0D9488),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  elevation: 0,
-                                ).copyWith(
-                                  backgroundColor: MaterialStateProperty.resolveWith<Color?>(
-                                    (Set<MaterialState> states) {
-                                      if (states.contains(MaterialState.pressed))
-                                        return Colors.grey.shade200;
-                                      return Colors.white; // Use the component's default.
-                                    },
-                                  ),
-                                ),
+                                style:
+                                    ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: const Color(0xFF0D9488),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      elevation: 0,
+                                    ).copyWith(
+                                      backgroundColor:
+                                          MaterialStateProperty.resolveWith<
+                                            Color?
+                                          >((Set<MaterialState> states) {
+                                            if (states.contains(
+                                              MaterialState.pressed,
+                                            ))
+                                              return Colors.grey.shade200;
+                                            return Colors
+                                                .white; // Use the component's default.
+                                          }),
+                                    ),
                                 child: _isLoading
                                     ? const SizedBox(
                                         height: 26,
                                         width: 26,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 3,
-                                          valueColor:
-                                              AlwaysStoppedAnimation(
-                                                Color(0xFF0D9488),
-                                              ),
+                                          valueColor: AlwaysStoppedAnimation(
+                                            Color(0xFF0D9488),
+                                          ),
                                         ),
                                       )
                                     : const Text(
@@ -286,22 +282,25 @@ class _LoginScreenState extends State<LoginScreen> {
                               onPressed: _isLoading
                                   ? null
                                   : () {
-                                      Navigator.pushNamed(
-                                        context,
-                                        '/register',
-                                      );
+                                      Navigator.pushNamed(context, '/register');
                                     },
-                              style: TextButton.styleFrom(
-                                foregroundColor: Colors.white,
-                              ).copyWith(
-                                overlayColor: MaterialStateProperty.resolveWith<Color?>(
-                                  (Set<MaterialState> states) {
-                                    if (states.contains(MaterialState.pressed))
-                                      return Colors.white.withOpacity(0.2);
-                                    return null; // Defer to the widget's default.
-                                  },
-                                ),
-                              ),
+                              style:
+                                  TextButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                  ).copyWith(
+                                    overlayColor:
+                                        MaterialStateProperty.resolveWith<
+                                          Color?
+                                        >((Set<MaterialState> states) {
+                                          if (states.contains(
+                                            MaterialState.pressed,
+                                          ))
+                                            return Colors.white.withOpacity(
+                                              0.2,
+                                            );
+                                          return null; // Defer to the widget's default.
+                                        }),
+                                  ),
                               child: const Text(
                                 'Do not have an account? Register',
                                 style: TextStyle(

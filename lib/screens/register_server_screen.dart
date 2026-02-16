@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/fb_service.dart';
-import '../core/theme_provider.dart';
 
 class RegisterServerScreen extends StatefulWidget {
   const RegisterServerScreen({Key? key}) : super(key: key);
@@ -22,7 +21,7 @@ class _RegisterServerScreenState extends State<RegisterServerScreen> {
   final _ipController2 = TextEditingController();
   final _ipController3 = TextEditingController();
   final _ipController4 = TextEditingController();
-  
+
   bool _isLoading = false;
 
   @override
@@ -56,15 +55,15 @@ class _RegisterServerScreenState extends State<RegisterServerScreen> {
       final firebaseService = Provider.of<FBService>(context, listen: false);
 
       await firebaseService.addServer(
-          _nameController.text.trim(),
-          _descriptionController.text.trim(),
-          ip,
-          port,
-          _secretController.text.trim()
+        _nameController.text.trim(),
+        _descriptionController.text.trim(),
+        ip,
+        port,
+        _secretController.text.trim(),
       );
 
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Server registered successfully'),
@@ -96,8 +95,6 @@ class _RegisterServerScreenState extends State<RegisterServerScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -187,7 +184,7 @@ class _RegisterServerScreenState extends State<RegisterServerScreen> {
               ),
             ),
           ),
-          
+
           Expanded(
             child: SingleChildScrollView(
               child: Padding(
@@ -203,7 +200,8 @@ class _RegisterServerScreenState extends State<RegisterServerScreen> {
                         label: 'Server Name',
                         icon: Icons.dns,
                         theme: theme,
-                        validator: (v) => v?.isEmpty == true ? 'Name is required' : null,
+                        validator: (v) =>
+                            v?.isEmpty == true ? 'Name is required' : null,
                       ),
                       const SizedBox(height: 16),
                       // Description
@@ -212,7 +210,9 @@ class _RegisterServerScreenState extends State<RegisterServerScreen> {
                         label: 'Description',
                         icon: Icons.description,
                         theme: theme,
-                        validator: (v) => v?.isEmpty == true ? 'Description is required' : null,
+                        validator: (v) => v?.isEmpty == true
+                            ? 'Description is required'
+                            : null,
                       ),
                       const SizedBox(height: 32),
 
@@ -221,10 +221,11 @@ class _RegisterServerScreenState extends State<RegisterServerScreen> {
                         padding: const EdgeInsets.only(left: 4, bottom: 8),
                         child: Text(
                           'IP Address',
-                          style: theme.inputDecorationTheme.labelStyle?.copyWith(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: theme.inputDecorationTheme.labelStyle
+                              ?.copyWith(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
                         ),
                       ),
                       Container(
@@ -245,17 +246,26 @@ class _RegisterServerScreenState extends State<RegisterServerScreen> {
                             _buildIpOctetField(_ipController1, theme),
                             const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 4),
-                              child: Text('.', style: TextStyle(fontWeight: FontWeight.bold)),
+                              child: Text(
+                                '.',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
                             ),
                             _buildIpOctetField(_ipController2, theme),
                             const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 4),
-                              child: Text('.', style: TextStyle(fontWeight: FontWeight.bold)),
+                              child: Text(
+                                '.',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
                             ),
                             _buildIpOctetField(_ipController3, theme),
                             const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 4),
-                              child: Text('.', style: TextStyle(fontWeight: FontWeight.bold)),
+                              child: Text(
+                                '.',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
                             ),
                             _buildIpOctetField(_ipController4, theme),
                           ],
@@ -272,7 +282,8 @@ class _RegisterServerScreenState extends State<RegisterServerScreen> {
                         validator: (v) {
                           if (v == null || v.isEmpty) return 'Port is required';
                           final p = int.tryParse(v);
-                          if (p == null || p < 1 || p > 65535) return 'Invalid port';
+                          if (p == null || p < 1 || p > 65535)
+                            return 'Invalid port';
                           return null;
                         },
                       ),
@@ -285,7 +296,8 @@ class _RegisterServerScreenState extends State<RegisterServerScreen> {
                         icon: Icons.security,
                         obscureText: true,
                         theme: theme,
-                        validator: (v) => v?.isEmpty == true ? 'Secret is required' : null,
+                        validator: (v) =>
+                            v?.isEmpty == true ? 'Secret is required' : null,
                       ),
                       const SizedBox(height: 16),
                       // PIN
@@ -296,7 +308,8 @@ class _RegisterServerScreenState extends State<RegisterServerScreen> {
                         keyboardType: TextInputType.number,
                         obscureText: true,
                         theme: theme,
-                        validator: (v) => v?.isEmpty == true ? 'PIN is required' : null,
+                        validator: (v) =>
+                            v?.isEmpty == true ? 'PIN is required' : null,
                       ),
                       const SizedBox(height: 100), // Padding for bottom button
                     ],
@@ -305,7 +318,7 @@ class _RegisterServerScreenState extends State<RegisterServerScreen> {
               ),
             ),
           ),
-          
+
           // Fixed Register Button
           Container(
             padding: const EdgeInsets.all(20),
@@ -353,7 +366,10 @@ class _RegisterServerScreenState extends State<RegisterServerScreen> {
                     ? const SizedBox(
                         width: 24,
                         height: 24,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
                       )
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -418,7 +434,10 @@ class _RegisterServerScreenState extends State<RegisterServerScreen> {
               controller: controller,
               obscureText: obscureText,
               keyboardType: keyboardType,
-              style: TextStyle(fontSize: 16, color: theme.textTheme.bodyLarge?.color),
+              style: TextStyle(
+                fontSize: 16,
+                color: theme.textTheme.bodyLarge?.color,
+              ),
               decoration: InputDecoration(
                 prefixIcon: Container(
                   margin: const EdgeInsets.all(8),

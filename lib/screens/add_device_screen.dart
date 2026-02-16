@@ -1,10 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import '../core/theme_provider.dart';
 import '../models/server.dart';
-import '../services/firebase_service.dart';
 
 class AddDeviceScreen extends StatefulWidget {
   final Server? preSelectedServer;
@@ -55,7 +52,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen>
 
   void _showQrCode(BuildContext context) {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    
+
     // Check if we have a valid server from the navigation arguments
     if (widget.preSelectedServer == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -99,17 +96,17 @@ class _AddDeviceScreenState extends State<AddDeviceScreen>
             const SizedBox(height: 24),
             Text(
               'Scan QR Code',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
               'Use your device to scan this code for configuration.',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
             ),
             const SizedBox(height: 32),
             Container(
@@ -266,9 +263,13 @@ class _AddDeviceScreenState extends State<AddDeviceScreen>
                           ),
                         ),
                         const SizedBox(height: 48),
-                        
+
                         // Device Name
-                        _buildLabel('Device Name', Icons.videocam_outlined, theme),
+                        _buildLabel(
+                          'Device Name',
+                          Icons.videocam_outlined,
+                          theme,
+                        ),
                         const SizedBox(height: 12),
                         _buildTextField(
                           controller: _deviceNameController,
@@ -277,9 +278,13 @@ class _AddDeviceScreenState extends State<AddDeviceScreen>
                           theme: theme,
                         ),
                         const SizedBox(height: 24),
-                        
+
                         // Description
-                        _buildLabel('Description', Icons.description_outlined, theme),
+                        _buildLabel(
+                          'Description',
+                          Icons.description_outlined,
+                          theme,
+                        ),
                         const SizedBox(height: 12),
                         _buildTextField(
                           controller: _descriptionController,
@@ -332,12 +337,15 @@ class _AddDeviceScreenState extends State<AddDeviceScreen>
                         ),
 
                         const SizedBox(height: 28),
-                        
+
                         // Info Card
                         Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [colorScheme.primary, colorScheme.secondary],
+                              colors: [
+                                colorScheme.primary,
+                                colorScheme.secondary,
+                              ],
                             ),
                             borderRadius: BorderRadius.circular(20),
                           ),
@@ -345,7 +353,9 @@ class _AddDeviceScreenState extends State<AddDeviceScreen>
                           child: Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: isDark ? colorScheme.surface : const Color(0xFFCCF7F3),
+                              color: isDark
+                                  ? colorScheme.surface
+                                  : const Color(0xFFCCF7F3),
                               borderRadius: BorderRadius.circular(18),
                             ),
                             child: Row(
@@ -375,7 +385,9 @@ class _AddDeviceScreenState extends State<AddDeviceScreen>
                                     'QR Code will be generated for the server shown above.',
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: isDark ? Colors.white70 : const Color(0xFF134E4A),
+                                      color: isDark
+                                          ? Colors.white70
+                                          : const Color(0xFF134E4A),
                                       fontWeight: FontWeight.w600,
                                       height: 1.4,
                                     ),
@@ -453,7 +465,9 @@ class _AddDeviceScreenState extends State<AddDeviceScreen>
                           style: OutlinedButton.styleFrom(
                             foregroundColor: theme.textTheme.bodyMedium?.color,
                             side: BorderSide(
-                              color: isDark ? Colors.grey.shade600 : Colors.grey.shade300,
+                              color: isDark
+                                  ? Colors.grey.shade600
+                                  : Colors.grey.shade300,
                               width: 2,
                             ),
                             shape: RoundedRectangleBorder(
@@ -528,7 +542,11 @@ class _AddDeviceScreenState extends State<AddDeviceScreen>
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: theme.textTheme.bodyLarge?.color),
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: theme.textTheme.bodyLarge?.color,
+        ),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: theme.inputDecorationTheme.hintStyle,

@@ -17,7 +17,7 @@ class DeviceStreamController extends ChangeNotifier {
 
   // Track disposal to prevent async race conditions
   bool _isDisposed = false;
-  
+
   // Track renderer initialization state
   bool _isRendererInitialized = false;
 
@@ -35,7 +35,6 @@ class DeviceStreamController extends ChangeNotifier {
   // --- WebRTC State ---
   RTCPeerConnection? _peerConnection;
   final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
-  MediaStream? _remoteStream;
 
   RTCVideoRenderer get remoteRenderer => _remoteRenderer;
   bool get hasActiveStream => _remoteRenderer.srcObject != null;
@@ -43,9 +42,7 @@ class DeviceStreamController extends ChangeNotifier {
   // --- WebRTC Configuration ---
   static final Map<String, dynamic> _iceServers = {
     'iceServers': [
-      {
-        'urls': 'stun:stun.l.google.com:19302',
-      },
+      {'urls': 'stun:stun.l.google.com:19302'},
       {
         'urls': 'turn:192.168.1.11:3478',
         'username': 'janus',
@@ -109,8 +106,7 @@ class DeviceStreamController extends ChangeNotifier {
     _peerConnection = null;
 
     // Clear renderer / local stream
-    _remoteStream = null;
-    
+
     // Only clear srcObject if initialized to avoid "Call initialize before setting the stream"
     if (_isRendererInitialized) {
       try {
@@ -219,7 +215,7 @@ class DeviceStreamController extends ChangeNotifier {
       debugPrint('Failed to create PeerConnection: $e');
       return;
     }
-    
+
     if (_isDisposed) {
       await _peerConnection?.close();
       _peerConnection = null;
@@ -272,15 +268,16 @@ class DeviceStreamController extends ChangeNotifier {
 
       if (event.streams.isNotEmpty && event.track.kind == 'video') {
         if (_isRendererInitialized) {
-           _remoteRenderer.srcObject = event.streams[0];
-           _remoteStream = event.streams[0];
-           debugPrint('✅ Remote video stream attached to renderer!');
-           debugPrint('Stream ID: ${event.streams[0].id}');
+          _remoteRenderer.srcObject = event.streams[0];
+          debugPrint('✅ Remote video stream attached to renderer!');
+          debugPrint('Stream ID: ${event.streams[0].id}');
 
-           // Notify UI that stream is ready
-           if (!_isDisposed) notifyListeners();
+          // Notify UI that stream is ready
+          if (!_isDisposed) notifyListeners();
         } else {
-           debugPrint('⚠️ Warning: Received track but renderer not initialized.');
+          debugPrint(
+            '⚠️ Warning: Received track but renderer not initialized.',
+          );
         }
       } else if (event.track.kind == 'audio') {
         debugPrint('🔊 Audio track received (not displayed)');
@@ -292,7 +289,9 @@ class DeviceStreamController extends ChangeNotifier {
     // 5. Setup local ICE candidate sender
     _peerConnection?.onIceCandidate = (candidate) {
       if (candidate.candidate != null && candidate.candidate!.isNotEmpty) {
-        debugPrint('🧊 Local ICE candidate generated: ${candidate.candidate?.substring(0, 50)}...');
+        debugPrint(
+          '🧊 Local ICE candidate generated: ${candidate.candidate?.substring(0, 50)}...',
+        );
         _janusService.sendTrickleCandidate(candidate).catchError((e) {
           debugPrint('❌ Error sending trickle candidate to Janus: $e');
         });
@@ -323,133 +322,161 @@ class DeviceStreamController extends ChangeNotifier {
         debugPrint('Message type: $janusType');
 
         // --- A. Publisher Events (on _publisherHandleId) ---
-        if (senderHandle == _janusService.publisherHandleId && plugindata != null) {
-           debugPrint('--- PUBLISHER EVENT ---');
-           final data = plugindata['data'] as Map<String, dynamic>;
-           final event = data['videoroom'];
-           debugPrint('VideoRoom event: $event');
-           debugPrint('Full data: $data');
+        if (senderHandle == _janusService.publisherHandleId &&
+            plugindata != null) {
+          debugPrint('--- PUBLISHER EVENT ---');
+          final data = plugindata['data'] as Map<String, dynamic>;
+          final event = data['videoroom'];
+          debugPrint('VideoRoom event: $event');
+          debugPrint('Full data: $data');
 
-           if (event == 'joined') {
-              debugPrint('✓ Joined room as publisher (viewer mode).');
-              debugPrint('Publishers in room: ${data['publishers']}');
-              if (data['publishers'] != null) {
-                 final publishers = data['publishers'] as List;
-                 debugPrint('Number of publishers: ${publishers.length}');
-                 if (publishers.isEmpty) {
-                    debugPrint('⚠️ NO PUBLISHERS AVAILABLE IN ROOM!');
-                    _errorMessage = 'No active camera stream found in room';
-                    if (!_isDisposed) notifyListeners();
-                 } else {
-                    // Subscribe to the first available publisher
-                    final feedId = publishers[0]['id'];
-                    final display = publishers[0]['display'];
-                    debugPrint('→ Subscribing to feed: $feedId (display: $display)');
-                    await _janusService.subscribeToFeed(feedId);
-                 }
+          if (event == 'joined') {
+            debugPrint('✓ Joined room as publisher (viewer mode).');
+            debugPrint('Publishers in room: ${data['publishers']}');
+            if (data['publishers'] != null) {
+              final publishers = data['publishers'] as List;
+              debugPrint('Number of publishers: ${publishers.length}');
+              if (publishers.isEmpty) {
+                debugPrint('⚠️ NO PUBLISHERS AVAILABLE IN ROOM!');
+                _errorMessage = 'No active camera stream found in room';
+                if (!_isDisposed) notifyListeners();
               } else {
-                 debugPrint('⚠️ Publishers field is NULL!');
+                // Subscribe to the first available publisher
+                final feedId = publishers[0]['id'];
+                final display = publishers[0]['display'];
+                debugPrint(
+                  '→ Subscribing to feed: $feedId (display: $display)',
+                );
+                await _janusService.subscribeToFeed(feedId);
               }
-           } else if (event == 'event') {
-              debugPrint('--- PUBLISHER EVENT (new publisher) ---');
-              if (data['publishers'] != null) {
-                  final publishers = data['publishers'] as List;
-                  debugPrint('New publishers count: ${publishers.length}');
-                  if (publishers.isNotEmpty) {
-                      final feedId = publishers[0]['id'];
-                      debugPrint('→ New publisher available: $feedId, subscribing...');
-                      await _janusService.subscribeToFeed(feedId);
-                  }
+            } else {
+              debugPrint('⚠️ Publishers field is NULL!');
+            }
+          } else if (event == 'event') {
+            debugPrint('--- PUBLISHER EVENT (new publisher) ---');
+            if (data['publishers'] != null) {
+              final publishers = data['publishers'] as List;
+              debugPrint('New publishers count: ${publishers.length}');
+              if (publishers.isNotEmpty) {
+                final feedId = publishers[0]['id'];
+                debugPrint(
+                  '→ New publisher available: $feedId, subscribing...',
+                );
+                await _janusService.subscribeToFeed(feedId);
               }
-           }
+            }
+          }
         }
 
         // --- B. Subscriber Events (on _subscriberHandleId) ---
         if (senderHandle == _janusService.subscriberHandleId) {
-            debugPrint('--- SUBSCRIBER EVENT ---');
+          debugPrint('--- SUBSCRIBER EVENT ---');
 
-            // Log plugindata if present
-            if (plugindata != null) {
-               debugPrint('Subscriber plugindata: $plugindata');
-            }
+          // Log plugindata if present
+          if (plugindata != null) {
+            debugPrint('Subscriber plugindata: $plugindata');
+          }
 
-            // 1. Handle JSEP (SDP Offer) from Janus
-            if (jsep != null) {
-              debugPrint('→ JSEP received from subscriber handle');
-              final type = jsep['type'] as String?;
-              final sdp = jsep['sdp'] as String?;
-              debugPrint('JSEP type: $type');
-              debugPrint('SDP present: ${sdp != null}');
+          // 1. Handle JSEP (SDP Offer) from Janus
+          if (jsep != null) {
+            debugPrint('→ JSEP received from subscriber handle');
+            final type = jsep['type'] as String?;
+            final sdp = jsep['sdp'] as String?;
+            debugPrint('JSEP type: $type');
+            debugPrint('SDP present: ${sdp != null}');
 
-              if (type == 'offer' && sdp != null) {
-                if (_peerConnection == null) {
-                   debugPrint('❌ PeerConnection is null when receiving offer. Skipping.');
-                   return;
-                }
-                
-                try {
-                  debugPrint('✓ Received SDP Offer from Janus Subscriber Handle.');
-                  debugPrint('SDP Offer (first 500 chars): ${sdp.substring(0, sdp.length > 500 ? 500 : sdp.length)}');
-
-                  // Add transceivers for receiving media (recvonly direction)
-                  try {
-                    debugPrint('Adding transceiver for video (recvonly)...');
-                    await _peerConnection!.addTransceiver(
-                      kind: RTCRtpMediaType.RTCRtpMediaTypeVideo,
-                      init: RTCRtpTransceiverInit(direction: TransceiverDirection.RecvOnly),
-                    );
-                    debugPrint('✓ Video transceiver added');
-                  } catch (e) {
-                    debugPrint('Note: Could not add video transceiver (may already exist): $e');
-                  }
-
-                  try {
-                    debugPrint('Adding transceiver for audio (recvonly)...');
-                    await _peerConnection!.addTransceiver(
-                      kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
-                      init: RTCRtpTransceiverInit(direction: TransceiverDirection.RecvOnly),
-                    );
-                    debugPrint('✓ Audio transceiver added');
-                  } catch (e) {
-                    debugPrint('Note: Could not add audio transceiver (may already exist): $e');
-                  }
-
-                  await _peerConnection!.setRemoteDescription(
-                    RTCSessionDescription(sdp, type),
-                  );
-                  debugPrint('✓ Remote description set successfully');
-
-                  if (_isDisposed || _peerConnection == null) return;
-
-                  final answer = await _peerConnection!.createAnswer({
-                    'mandatory': {
-                      'OfferToReceiveAudio': true,
-                      'OfferToReceiveVideo': true,
-                    }
-                  });
-                  debugPrint('✓ Local SDP Answer created.');
-                  debugPrint('Answer SDP (first 800 chars): ${answer.sdp!.substring(0, answer.sdp!.length > 800 ? 800 : answer.sdp!.length)}');
-
-                  final updatedSdp = _preferCodec(answer.sdp!, 'H264');
-                  final updatedAnswer = RTCSessionDescription(updatedSdp, answer.type);
-
-                  debugPrint('Updated Answer SDP (first 800 chars): ${updatedSdp.substring(0, updatedSdp.length > 800 ? 800 : updatedSdp.length)}');
-
-                  if (_isDisposed || _peerConnection == null) return;
-                  await _peerConnection!.setLocalDescription(updatedAnswer);
-                  debugPrint('✓ Local description set successfully');
-
-                  await _janusService.sendAnswer(updatedAnswer);
-                  debugPrint('✓ SDP Answer sent to Janus with forced H264 preference.');
-                } catch (e, st) {
-                  debugPrint('❌ Error handling SDP offer/answer flow: $e\n$st');
-                  _errorMessage = 'WebRTC SDP handling error: $e';
-                  if (!_isDisposed) notifyListeners();
-                }
+            if (type == 'offer' && sdp != null) {
+              if (_peerConnection == null) {
+                debugPrint(
+                  '❌ PeerConnection is null when receiving offer. Skipping.',
+                );
+                return;
               }
-            } else {
-              debugPrint('No JSEP in subscriber message');
+
+              try {
+                debugPrint(
+                  '✓ Received SDP Offer from Janus Subscriber Handle.',
+                );
+                debugPrint(
+                  'SDP Offer (first 500 chars): ${sdp.substring(0, sdp.length > 500 ? 500 : sdp.length)}',
+                );
+
+                // Add transceivers for receiving media (recvonly direction)
+                try {
+                  debugPrint('Adding transceiver for video (recvonly)...');
+                  await _peerConnection!.addTransceiver(
+                    kind: RTCRtpMediaType.RTCRtpMediaTypeVideo,
+                    init: RTCRtpTransceiverInit(
+                      direction: TransceiverDirection.RecvOnly,
+                    ),
+                  );
+                  debugPrint('✓ Video transceiver added');
+                } catch (e) {
+                  debugPrint(
+                    'Note: Could not add video transceiver (may already exist): $e',
+                  );
+                }
+
+                try {
+                  debugPrint('Adding transceiver for audio (recvonly)...');
+                  await _peerConnection!.addTransceiver(
+                    kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
+                    init: RTCRtpTransceiverInit(
+                      direction: TransceiverDirection.RecvOnly,
+                    ),
+                  );
+                  debugPrint('✓ Audio transceiver added');
+                } catch (e) {
+                  debugPrint(
+                    'Note: Could not add audio transceiver (may already exist): $e',
+                  );
+                }
+
+                await _peerConnection!.setRemoteDescription(
+                  RTCSessionDescription(sdp, type),
+                );
+                debugPrint('✓ Remote description set successfully');
+
+                if (_isDisposed || _peerConnection == null) return;
+
+                final answer = await _peerConnection!.createAnswer({
+                  'mandatory': {
+                    'OfferToReceiveAudio': true,
+                    'OfferToReceiveVideo': true,
+                  },
+                });
+                debugPrint('✓ Local SDP Answer created.');
+                debugPrint(
+                  'Answer SDP (first 800 chars): ${answer.sdp!.substring(0, answer.sdp!.length > 800 ? 800 : answer.sdp!.length)}',
+                );
+
+                final updatedSdp = _preferCodec(answer.sdp!, 'H264');
+                final updatedAnswer = RTCSessionDescription(
+                  updatedSdp,
+                  answer.type,
+                );
+
+                debugPrint(
+                  'Updated Answer SDP (first 800 chars): ${updatedSdp.substring(0, updatedSdp.length > 800 ? 800 : updatedSdp.length)}',
+                );
+
+                if (_isDisposed || _peerConnection == null) return;
+                await _peerConnection!.setLocalDescription(updatedAnswer);
+                debugPrint('✓ Local description set successfully');
+
+                await _janusService.sendAnswer(updatedAnswer);
+                debugPrint(
+                  '✓ SDP Answer sent to Janus with forced H264 preference.',
+                );
+              } catch (e, st) {
+                debugPrint('❌ Error handling SDP offer/answer flow: $e\n$st');
+                _errorMessage = 'WebRTC SDP handling error: $e';
+                if (!_isDisposed) notifyListeners();
+              }
             }
+          } else {
+            debugPrint('No JSEP in subscriber message');
+          }
         }
 
         // --- C. Trickle Candidates ---
@@ -458,15 +485,15 @@ class DeviceStreamController extends ChangeNotifier {
           debugPrint('→ ICE Trickle candidate received');
 
           if (candidateJson['completed'] == true) {
-             debugPrint('✓ Janus ICE gathering complete.');
-             return;
+            debugPrint('✓ Janus ICE gathering complete.');
+            return;
           }
 
           debugPrint('Candidate details: ${candidateJson['candidate']}');
 
           if (_peerConnection == null) {
-             debugPrint('❌ PeerConnection is null, cannot add ICE candidate');
-             return;
+            debugPrint('❌ PeerConnection is null, cannot add ICE candidate');
+            return;
           }
 
           try {
@@ -484,26 +511,31 @@ class DeviceStreamController extends ChangeNotifier {
 
         // --- D. Handle webrtcup event ---
         if (janusType == 'webrtcup') {
-           debugPrint('🎉 WebRTC PeerConnection is UP! Stream should be flowing now.');
+          debugPrint(
+            '🎉 WebRTC PeerConnection is UP! Stream should be flowing now.',
+          );
         }
 
         // --- E. Handle media event ---
         if (janusType == 'media') {
-           debugPrint('📺 Media event: type=${json['type']}, receiving=${json['receiving']}');
+          debugPrint(
+            '📺 Media event: type=${json['type']}, receiving=${json['receiving']}',
+          );
         }
 
         // --- F. Handle hangup ---
         if (janusType == 'hangup') {
-           debugPrint('📞 Hangup received: ${json['reason']}');
-           _errorMessage = 'Stream ended: ${json['reason']}';
-           if (!_isDisposed) notifyListeners();
+          debugPrint('📞 Hangup received: ${json['reason']}');
+          _errorMessage = 'Stream ended: ${json['reason']}';
+          if (!_isDisposed) notifyListeners();
         }
 
         // --- G. Handle errors ---
         if (janusType == 'error') {
-           debugPrint('❌ Janus Error: ${json['error']}');
-           _errorMessage = 'Janus error: ${json['error']?['reason'] ?? 'Unknown error'}';
-           if (!_isDisposed) notifyListeners();
+          debugPrint('❌ Janus Error: ${json['error']}');
+          _errorMessage =
+              'Janus error: ${json['error']?['reason'] ?? 'Unknown error'}';
+          if (!_isDisposed) notifyListeners();
         }
       },
       onError: (error) {
@@ -514,7 +546,7 @@ class DeviceStreamController extends ChangeNotifier {
 
     // 7. Attach Main Publisher Handle & Join Room
     await _janusService.attachAsPublisher();
-    await _janusService.joinRoomAsPublisher(); 
+    await _janusService.joinRoomAsPublisher();
   }
 
   // --- Control Methods ---
@@ -551,34 +583,38 @@ class DeviceStreamController extends ChangeNotifier {
   // Helper to modify SDP to prefer a specific codec
   String _preferCodec(String sdp, String codec) {
     final sdpLines = sdp.split('\r\n');
-    final mVideoIndex = sdpLines.indexWhere((line) => line.startsWith('m=video'));
+    final mVideoIndex = sdpLines.indexWhere(
+      (line) => line.startsWith('m=video'),
+    );
     if (mVideoIndex == -1) return sdp;
 
     final mVideoLine = sdpLines[mVideoIndex];
     final parts = mVideoLine.split(' ');
     if (parts.length < 4) return sdp;
 
-    final payloadTypes = parts.sublist(3); 
+    final payloadTypes = parts.sublist(3);
 
     String? preferredPt;
     for (final line in sdpLines) {
-      if (line.startsWith('a=rtpmap:') && line.toUpperCase().contains(codec.toUpperCase())) {
+      if (line.startsWith('a=rtpmap:') &&
+          line.toUpperCase().contains(codec.toUpperCase())) {
         final pt = line.split(':')[1].split(' ')[0];
         preferredPt = pt;
-        break; 
+        break;
       }
     }
 
     if (preferredPt == null) {
-       debugPrint('Codec $codec not found in SDP, cannot prefer it.');
-       return sdp;
+      debugPrint('Codec $codec not found in SDP, cannot prefer it.');
+      return sdp;
     }
 
     if (payloadTypes.contains(preferredPt)) {
       payloadTypes.remove(preferredPt);
       payloadTypes.insert(0, preferredPt);
-      
-      final newMLine = '${parts[0]} ${parts[1]} ${parts[2]} ${payloadTypes.join(' ')}';
+
+      final newMLine =
+          '${parts[0]} ${parts[1]} ${parts[2]} ${payloadTypes.join(' ')}';
       sdpLines[mVideoIndex] = newMLine;
       debugPrint('Reordered SDP to prefer codec $codec (PT $preferredPt)');
       return sdpLines.join('\r\n');

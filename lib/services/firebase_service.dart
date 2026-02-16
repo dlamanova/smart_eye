@@ -4,10 +4,8 @@ import 'dart:io' show Platform;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart'; // Add WebRTC import for RTCIceCandidate
 import 'package:flutter/foundation.dart'; // Import for debugPrint
 import 'package:http/http.dart' as http; // Add http import
-import '/models/device.dart';
 import '../models/notification.dart';
 import '../models/server.dart'; // Add import for Server model
 
@@ -151,9 +149,9 @@ class FirebaseService {
       // Usually the server would return the ID. If you need to generate one client-side:
       // 'id': _firestore.collection('dummy').doc().id, // Example if client-side ID generation is needed
     };
-    
+
     // If the API expects an 'id' field even for new entries (client-generated ID), uncomment below:
-    // body['id'] = DateTime.now().millisecondsSinceEpoch.toString(); 
+    // body['id'] = DateTime.now().millisecondsSinceEpoch.toString();
 
     try {
       final response = await http.post(
@@ -167,12 +165,13 @@ class FirebaseService {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         debugPrint('Server added successfully via API: ${response.body}');
-        
-        // Optionally save the PIN locally here using SharedPreferences or secure storage if needed
-        // await SecureStorage.savePin(pin); 
 
+        // Optionally save the PIN locally here using SharedPreferences or secure storage if needed
+        // await SecureStorage.savePin(pin);
       } else {
-        throw HttpException('Failed to add server. Status: ${response.statusCode}, Body: ${response.body}');
+        throw HttpException(
+          'Failed to add server. Status: ${response.statusCode}, Body: ${response.body}',
+        );
       }
     } catch (e) {
       debugPrint('Error sending server data to API: $e');
@@ -186,18 +185,20 @@ class FirebaseService {
   Future<List<Server>> fetchServers() async {
     final user = currentUser;
     if (user == null) return [];
-    
+
     try {
       final token = await user.getIdToken();
       // Placeholder API call
       final Uri url = Uri.parse('YOUR_GET_SERVERS_ENDPOINT_HERE');
-      
+
       // Simulate network request
       // final response = await http.get(url, headers: {'Authorization': 'Bearer $token'});
       // if (response.statusCode == 200) { ... parse json ... }
-      
+
       // For now, return placeholder data as requested
-      await Future.delayed(const Duration(milliseconds: 500)); // Simulate latency
+      await Future.delayed(
+        const Duration(milliseconds: 500),
+      ); // Simulate latency
       return [
         Server(
           id: 'server_1',
@@ -232,7 +233,11 @@ class FirebaseService {
   // --- Firestore Device Management (Private Data) ---
 
   /// Adds a new device document to the current user's collection.
-  Future<void> addDevice({required String name, required String id, String? serverId}) async {
+  Future<void> addDevice({
+    required String name,
+    required String id,
+    String? serverId,
+  }) async {
     final userId = currentUser?.uid;
 
     if (userId == null) {
@@ -245,7 +250,7 @@ class FirebaseService {
     final deviceRef = _firestore
         .collection('artifacts/$appId/users/$userId/devices')
         .doc(id);
-    
+
     // In a real implementation with servers, you might also link the device to the server
     // e.g., artifacts/$appId/users/$userId/servers/$serverId/devices/$id
     // For now, we just add the serverId to the device metadata if provided.
@@ -265,9 +270,6 @@ class FirebaseService {
   /// Streams a list of all devices owned by the current user.
   /// Modified to optionally filter or just fetch all.
   /// The UI then maps these devices to the servers.
-
-
-
 
   /// Updates specific fields on a device document.
   Future<void> updateDeviceState(
@@ -299,18 +301,18 @@ class FirebaseService {
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        return NotificationItem(
-          id: doc.id,
-          title: data['title'] ?? '',
-          message: data['message'] ?? '',
-          timestamp: _formatTimestamp(data['timestamp']),
-          type: _parseNotificationType(data['name']),
-          isRead: data['isRead'] ?? false,
-        );
-      }).toList();
-    });
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            return NotificationItem(
+              id: doc.id,
+              title: data['title'] ?? '',
+              message: data['message'] ?? '',
+              timestamp: _formatTimestamp(data['timestamp']),
+              type: _parseNotificationType(data['name']),
+              isRead: data['isRead'] ?? false,
+            );
+          }).toList();
+        });
   }
 
   /// Adds a new notification to Firestore (for testing or backend triggers).
@@ -322,13 +324,15 @@ class FirebaseService {
     final userId = currentUser?.uid;
     if (userId == null) return;
 
-    await _firestore.collection('artifacts/$appId/users/$userId/notifications').add({
-      'title': title,
-      'message': message,
-      'timestamp': FieldValue.serverTimestamp(),
-      'type': type.toString().split('.').last,
-      'isRead': false,
-    });
+    await _firestore
+        .collection('artifacts/$appId/users/$userId/notifications')
+        .add({
+          'title': title,
+          'message': message,
+          'timestamp': FieldValue.serverTimestamp(),
+          'type': type.toString().split('.').last,
+          'isRead': false,
+        });
   }
 
   /// Marks a specific notification as read.
@@ -340,7 +344,7 @@ class FirebaseService {
         .doc('artifacts/$appId/users/$userId/notifications/$notificationId')
         .update({'isRead': true});
   }
-  
+
   /// Marks a specific notification as unread.
   Future<void> markNotificationAsUnread(String notificationId) async {
     final userId = currentUser?.uid;
@@ -515,16 +519,13 @@ class FirebaseService {
       if (message.notification != null) {
         debugPrint(
           'Message also contained a notification: ${message.notification}',
-
         );
-        addNotification(title: message.notification!.title ?? 'Event',
-            message: message.notification!.body ?? 'No message');
+        addNotification(
+          title: message.notification!.title ?? 'Event',
+          message: message.notification!.body ?? 'No message',
+        );
       }
-      }
-
-    );
-    
-
+    });
   }
 }
 

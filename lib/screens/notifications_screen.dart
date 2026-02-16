@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import 'package:smart_eye/models/notification.dart';
-import '../core/theme_provider.dart';
 import '../services/firebase_service.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -34,7 +32,6 @@ class _NotificationsScreenState extends State<NotificationsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
     final theme = Theme.of(context);
 
     return StreamBuilder<List<NotificationItem>>(
@@ -201,7 +198,11 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                             builder: (context, child) {
                               final delay = index * 0.1;
                               final animValue = Curves.easeOut.transform(
-                                math.max(0, (_animationController.value - delay) / (1 - delay)),
+                                math.max(
+                                  0,
+                                  (_animationController.value - delay) /
+                                      (1 - delay),
+                                ),
                               );
 
                               return Transform.translate(
@@ -218,14 +219,20 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                                 notification: notification,
                                 onTap: () {
                                   if (!notification.isRead) {
-                                    _firebaseService.markNotificationAsRead(notification.id);
+                                    _firebaseService.markNotificationAsRead(
+                                      notification.id,
+                                    );
                                   }
                                 },
                                 onDelete: () {
-                                  _firebaseService.deleteNotification(notification.id);
+                                  _firebaseService.deleteNotification(
+                                    notification.id,
+                                  );
                                 },
                                 onMarkUnread: () {
-                                    _firebaseService.markNotificationAsUnread(notification.id);
+                                  _firebaseService.markNotificationAsUnread(
+                                    notification.id,
+                                  );
                                 },
                               ),
                             ),
@@ -252,10 +259,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF14B8A6),
-                  Color(0xFF0D9488),
-                ],
+                colors: [Color(0xFF14B8A6), Color(0xFF0D9488)],
               ),
               shape: BoxShape.circle,
               boxShadow: [
@@ -371,9 +375,9 @@ class _NotificationCardState extends State<_NotificationCard> {
           border: widget.notification.isRead
               ? null
               : Border.all(
-            color: const Color(0xFF0D9488).withOpacity(0.3),
-            width: 2,
-          ),
+                  color: const Color(0xFF0D9488).withOpacity(0.3),
+                  width: 2,
+                ),
           boxShadow: [
             BoxShadow(
               color: widget.notification.isRead
@@ -401,11 +405,7 @@ class _NotificationCardState extends State<_NotificationCard> {
                     width: 2,
                   ),
                 ),
-                child: Icon(
-                  typeIcon,
-                  size: 28,
-                  color: typeColor,
-                ),
+                child: Icon(typeIcon, size: 28, color: typeColor),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -435,7 +435,9 @@ class _NotificationCardState extends State<_NotificationCard> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF0D9488).withOpacity(0.5),
+                                  color: const Color(
+                                    0xFF0D9488,
+                                  ).withOpacity(0.5),
                                   blurRadius: 6,
                                   spreadRadius: 1,
                                 ),
@@ -474,7 +476,10 @@ class _NotificationCardState extends State<_NotificationCard> {
                 ),
               ),
               PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: theme.iconTheme.color?.withOpacity(0.6)),
+                icon: Icon(
+                  Icons.more_vert,
+                  color: theme.iconTheme.color?.withOpacity(0.6),
+                ),
                 onSelected: (value) {
                   if (value == 'delete') {
                     widget.onDelete();
@@ -496,7 +501,10 @@ class _NotificationCardState extends State<_NotificationCard> {
                       value: 'delete',
                       child: ListTile(
                         leading: Icon(Icons.delete_outline, color: Colors.red),
-                        title: Text('Delete', style: TextStyle(color: Colors.red)),
+                        title: Text(
+                          'Delete',
+                          style: TextStyle(color: Colors.red),
+                        ),
                       ),
                     ),
                   ];
