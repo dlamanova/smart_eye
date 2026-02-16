@@ -1,11 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart'; // Add WebRTC import for RTCIceCandidate
 import 'package:flutter/foundation.dart'; // Import for debugPrint
-import '/features/devices/models/device_model.dart';
+import 'package:http/http.dart' as http; // Add http import
+import '/models/device.dart';
+import '../models/notification.dart';
+import '../models/server.dart'; // Add import for Server model
 
 /// Centralized service class to handle all Firebase interactions (Auth and Firestore),
 /// now including WebRTC signaling.
@@ -37,12 +41,12 @@ class FirebaseService {
   User? get currentUser => _auth.currentUser;
 
   /// Signs in a user with email and password.
-  Future<UserCredential> signIn(String email, String password) async {
+  Future<UserCredential> login(String email, String password) async {
     return _auth.signInWithEmailAndPassword(email: email, password: password);
   }
 
   /// Creates a new user with email and password.
-  Future<UserCredential> signUp(String email, String password) async {
+  Future<UserCredential> register(String email, String password) async {
     return _auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
@@ -54,12 +58,181 @@ class FirebaseService {
     await _auth.signOut();
   }
 
+  /// Deletes the current user account.
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await user.delete();
+    } else {
+      throw FirebaseAuthException(
+        code: 'no-current-user',
+        message: 'No user signed in.',
+      );
+    }
+  }
+
+  /// Updates the current user's profile information.
+  Future<void> updateProfile({String? displayName, String? photoURL}) async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await user.updateDisplayName(displayName);
+      await user.updatePhotoURL(photoURL);
+    } else {
+      throw FirebaseAuthException(
+        code: 'no-current-user',
+        message: 'No user signed in.',
+      );
+    }
+  }
+
+  /// Updates the current user's email address.
+  Future<void> updateEmail(String newEmail) async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await user.verifyBeforeUpdateEmail(newEmail);
+    } else {
+      throw FirebaseAuthException(
+        code: 'no-current-user',
+        message: 'No user signed in.',
+      );
+    }
+  }
+
+  /// Updates the current user's password.
+  Future<void> updatePassword(String newPassword) async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await user.updatePassword(newPassword);
+    } else {
+      throw FirebaseAuthException(
+        code: 'no-current-user',
+        message: 'No user signed in.',
+      );
+    }
+  }
+
+  // --- Firestore Server Management ---
+
+  /// Sends server data to the external API instead of saving to Firestore.
+  /// Pin is stored locally (or not sent), and Authorization header is used.
+  Future<void> addServer({
+    required String name,
+    required String description,
+    required List<int> ip,
+    required int port,
+    required String secret,
+    required String pin,
+  }) async {
+    final user = currentUser;
+
+    if (user == null) {
+      throw StateError(
+        'User must be logged in to add a server. Please log in first.',
+      );
+    }
+
+    final String? token = await user.getIdToken();
+    if (token == null) {
+      throw StateError('Could not retrieve user authentication token.');
+    }
+
+    // Placeholder URL for the addserver endpoint
+    final Uri url = Uri.parse('YOUR_ADD_SERVER_ENDPOINT_HERE');
+
+    // Construct the request body
+    // Note: 'pin' is NOT included in the request body as per requirements.
+    final Map<String, dynamic> body = {
+      'name': name,
+      'description': description,
+      'ip': ip,
+      'port': port,
+      'secret': secret,
+      // 'id' is requested to be sent, but we don't have a server ID yet as this is a creation request.
+      // Usually the server would return the ID. If you need to generate one client-side:
+      // 'id': _firestore.collection('dummy').doc().id, // Example if client-side ID generation is needed
+    };
+    
+    // If the API expects an 'id' field even for new entries (client-generated ID), uncomment below:
+    // body['id'] = DateTime.now().millisecondsSinceEpoch.toString(); 
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        debugPrint('Server added successfully via API: ${response.body}');
+        
+        // Optionally save the PIN locally here using SharedPreferences or secure storage if needed
+        // await SecureStorage.savePin(pin); 
+
+      } else {
+        throw HttpException('Failed to add server. Status: ${response.statusCode}, Body: ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('Error sending server data to API: $e');
+      rethrow; // Re-throw to be handled by the UI
+    }
+  }
+
+  // --- Server Retrieval (API / Placeholder) ---
+
+  /// Fetches the list of servers from the API.
+  Future<List<Server>> fetchServers() async {
+    final user = currentUser;
+    if (user == null) return [];
+    
+    try {
+      final token = await user.getIdToken();
+      // Placeholder API call
+      final Uri url = Uri.parse('YOUR_GET_SERVERS_ENDPOINT_HERE');
+      
+      // Simulate network request
+      // final response = await http.get(url, headers: {'Authorization': 'Bearer $token'});
+      // if (response.statusCode == 200) { ... parse json ... }
+      
+      // For now, return placeholder data as requested
+      await Future.delayed(const Duration(milliseconds: 500)); // Simulate latency
+      return [
+        Server(
+          id: 'server_1',
+          name: 'Home Server',
+          description: 'Raspberry Pi 4 - Living Room',
+          ip: [192, 168, 1, 11],
+          port: 5000,
+          secret: 'janus_secret_1',
+          pin: '1234',
+        ),
+        Server(
+          id: 'server_2',
+          name: 'Office Server',
+          description: 'Ubuntu Server - Office',
+          ip: [10, 0, 0, 50],
+          port: 8188,
+          secret: 'janus_secret_2',
+          pin: '5678',
+        ),
+      ];
+    } catch (e) {
+      debugPrint('Error fetching servers: $e');
+      return [];
+    }
+  }
+
+  /// Streams user servers. Currently backed by fetchServers (one-time fetch converted to stream).
+  Stream<List<Server>> streamUserServers() async* {
+    yield await fetchServers();
+  }
+
   // --- Firestore Device Management (Private Data) ---
 
-  // ... (Existing Device Management methods remain the same) ...
-
   /// Adds a new device document to the current user's collection.
-  Future<void> addDevice({required String name, required String id}) async {
+  Future<void> addDevice({required String name, required String id, String? serverId}) async {
     final userId = currentUser?.uid;
 
     if (userId == null) {
@@ -72,11 +245,16 @@ class FirebaseService {
     final deviceRef = _firestore
         .collection('artifacts/$appId/users/$userId/devices')
         .doc(id);
+    
+    // In a real implementation with servers, you might also link the device to the server
+    // e.g., artifacts/$appId/users/$userId/servers/$serverId/devices/$id
+    // For now, we just add the serverId to the device metadata if provided.
 
     await deviceRef.set({
       'id': id,
       'name': name,
       'owner': userId, // Store the owner's ID
+      'serverId': serverId, // Link to server
       'isOnline': false,
       'isPoweredOn': false,
       'isMotionDetectionEnabled': false,
@@ -85,46 +263,11 @@ class FirebaseService {
   }
 
   /// Streams a list of all devices owned by the current user.
-  Stream<List<DeviceModel>> streamUserDevices() {
-    final userId = currentUser?.uid;
-    if (userId == null) {
-      // If no user is logged in, return an empty stream
-      return Stream.value([]);
-    }
+  /// Modified to optionally filter or just fetch all.
+  /// The UI then maps these devices to the servers.
 
-    // Reference the user's private devices collection
-    final collectionRef = _firestore.collection(
-      'artifacts/$appId/users/$userId/devices',
-    );
 
-    return collectionRef.snapshots().map((snapshot) {
-      // Map each document to a DeviceModel
-      return snapshot.docs.map((doc) {
-        return DeviceModel.fromFirestore(doc.data(), doc.id);
-      }).toList();
-    });
-  }
 
-  /// Streams the data for a single specific device.
-  Stream<DeviceModel?> streamDevice(String deviceId) {
-    final userId = currentUser?.uid;
-    if (userId == null) {
-      return Stream.value(null);
-    }
-
-    // Reference the specific device document
-    final docRef = _firestore.doc(
-      'artifacts/$appId/users/$userId/devices/$deviceId',
-    );
-
-    return docRef.snapshots().map((snapshot) {
-      if (!snapshot.exists) {
-        return null;
-      }
-      // Map the document data to a DeviceModel
-      return DeviceModel.fromFirestore(snapshot.data()!, snapshot.id);
-    });
-  }
 
   /// Updates specific fields on a device document.
   Future<void> updateDeviceState(
@@ -140,6 +283,126 @@ class FirebaseService {
       'artifacts/$appId/users/$userId/devices/$deviceId',
     );
     await docRef.update(updates);
+  }
+
+  // --- Notification Methods ---
+
+  /// Streams user notifications from Firestore.
+  Stream<List<NotificationItem>> streamNotifications() {
+    final userId = currentUser?.uid;
+    if (userId == null) {
+      return Stream.value([]);
+    }
+
+    return _firestore
+        .collection('artifacts/$appId/users/$userId/notifications')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return NotificationItem(
+          id: doc.id,
+          title: data['title'] ?? '',
+          message: data['message'] ?? '',
+          timestamp: _formatTimestamp(data['timestamp']),
+          type: _parseNotificationType(data['name']),
+          isRead: data['isRead'] ?? false,
+        );
+      }).toList();
+    });
+  }
+
+  /// Adds a new notification to Firestore (for testing or backend triggers).
+  Future<void> addNotification({
+    required String title,
+    required String message,
+    NotificationType type = NotificationType.info,
+  }) async {
+    final userId = currentUser?.uid;
+    if (userId == null) return;
+
+    await _firestore.collection('artifacts/$appId/users/$userId/notifications').add({
+      'title': title,
+      'message': message,
+      'timestamp': FieldValue.serverTimestamp(),
+      'type': type.toString().split('.').last,
+      'isRead': false,
+    });
+  }
+
+  /// Marks a specific notification as read.
+  Future<void> markNotificationAsRead(String notificationId) async {
+    final userId = currentUser?.uid;
+    if (userId == null) return;
+
+    await _firestore
+        .doc('artifacts/$appId/users/$userId/notifications/$notificationId')
+        .update({'isRead': true});
+  }
+  
+  /// Marks a specific notification as unread.
+  Future<void> markNotificationAsUnread(String notificationId) async {
+    final userId = currentUser?.uid;
+    if (userId == null) return;
+
+    await _firestore
+        .doc('artifacts/$appId/users/$userId/notifications/$notificationId')
+        .update({'isRead': false});
+  }
+
+  /// Marks all unread notifications as read.
+  Future<void> markAllNotificationsAsRead() async {
+    final userId = currentUser?.uid;
+    if (userId == null) return;
+
+    final batch = _firestore.batch();
+    final snapshot = await _firestore
+        .collection('artifacts/$appId/users/$userId/notifications')
+        .where('isRead', isEqualTo: false)
+        .get();
+
+    for (var doc in snapshot.docs) {
+      batch.update(doc.reference, {'isRead': true});
+    }
+
+    await batch.commit();
+  }
+
+  /// Deletes a specific notification.
+  Future<void> deleteNotification(String notificationId) async {
+    final userId = currentUser?.uid;
+    if (userId == null) return;
+
+    await _firestore
+        .doc('artifacts/$appId/users/$userId/notifications/$notificationId')
+        .delete();
+  }
+
+  // Helper: Format Firestore Timestamp to String
+  String _formatTimestamp(dynamic timestamp) {
+    if (timestamp is Timestamp) {
+      final now = DateTime.now();
+      final date = timestamp.toDate();
+      final diff = now.difference(date);
+
+      if (diff.inMinutes < 60) {
+        return '${diff.inMinutes} minutes ago';
+      } else if (diff.inHours < 24) {
+        return '${diff.inHours} hours ago';
+      } else {
+        return '${diff.inDays} days ago';
+      }
+    }
+    return 'Just now';
+  }
+
+  // Helper: Parse NotificationType from String
+  NotificationType _parseNotificationType(String? typeStr) {
+    return NotificationType.values.firstWhere(
+      (e) => e.toString().split('.').last == typeStr,
+      orElse: () => NotificationType.info,
+    );
   }
 
   // --- WebRTC Signaling Methods (Public Data) ---
@@ -224,7 +487,9 @@ class FirebaseService {
       for (int i = 0; i < 1; i++) {
         try {
           apns = await _messaging.getAPNSToken();
-          debugPrint('Trying to get APNs token, attempt ${i + 1}, result: $apns');
+          debugPrint(
+            'Trying to get APNs token, attempt ${i + 1}, result: $apns',
+          );
         } catch (e) {
           debugPrint('getAPNSToken error (ignored): $e');
         }
@@ -244,12 +509,28 @@ class FirebaseService {
 
     // Foreground message handler
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('Received a foreground message: ${message.messageId}');
-      if (message.notification != null) {
-        debugPrint('Notification: ${message.notification}');
-      }
-    });
+      debugPrint('Got a message whilst in the foreground!');
+      debugPrint('Message data: ${message.data}');
 
-    // Optionally handle background/tapped messages with onBackgroundMessage and onMessageOpenedApp
+      if (message.notification != null) {
+        debugPrint(
+          'Message also contained a notification: ${message.notification}',
+
+        );
+        addNotification(title: message.notification!.title ?? 'Event',
+            message: message.notification!.body ?? 'No message');
+      }
+      }
+
+    );
+    
+
   }
+}
+
+class HttpException implements Exception {
+  final String message;
+  HttpException(this.message);
+  @override
+  String toString() => message;
 }

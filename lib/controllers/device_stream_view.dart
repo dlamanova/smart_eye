@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 // Assuming these are your paths to the controller and model
-import '/features/devices/controllers/device_stream_controller.dart';
-import '/features/devices/models/device_model.dart';
+import 'device_stream_controller.dart';
+import '/models/device.dart';
 
 /// The UI view for displaying the device stream and controls.
 class DeviceStreamView extends StatelessWidget {
@@ -115,7 +115,7 @@ class DeviceStreamView extends StatelessWidget {
   }
 
   /// Builds a card summarizing the device status.
-  Widget _buildStatusCard(DeviceModel device) {
+  Widget _buildStatusCard(Device device) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -176,7 +176,7 @@ class DeviceStreamView extends StatelessWidget {
   Widget _buildControls(
     BuildContext context,
     DeviceStreamController controller,
-    DeviceModel device,
+    Device device,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,13 +309,13 @@ class DeviceStreamView extends StatelessWidget {
   }
 }
 
-// NOTE: For the app to run, you would typically use MultiProvider 
+// NOTE: For the app to run, you would typically use MultiProvider
 // at the root of your application, wrapping the DeviceStreamView:
 /*
 void main() {
   // Ensure Firebase is initialized and dependencies are set up
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Example of how the view would be connected:
   runApp(
     MultiProvider(
